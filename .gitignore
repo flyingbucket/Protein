@@ -1,0 +1,9 @@
+proteinenv/__pycache__/
+proteinenv/Include/
+proteinenv/Lib/
+proteinenv/Scripts/
+proteinenv/share/
+
+*.pyc
+*.bak
+*.swp
