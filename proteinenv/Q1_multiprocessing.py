@@ -2,8 +2,11 @@ import pandas as pd
 import networkx as nx
 from concurrent.futures import ProcessPoolExecutor
 
+# 指定路径
+data_path = 'D:\mypython\math_modeling\protein\data.csv'
+output_path = 'D:\mypython\math_modeling\protein\top_100_nodes_per_subgraph.xlsx'
 # 读取数据
-data_df = pd.read_csv('D:\mypython\math_modeling\protein\data.csv', header=0)
+data_df = pd.read_csv(data_path, header=0)
 edges = data_df[['Protein A', 'Protein B', 'Score']]
 
 # 创建图
@@ -39,7 +42,7 @@ def get_top_100_centrality_nodes(centrality_dict):
 top_100_nodes_per_subgraph = [get_top_100_centrality_nodes(ec) for ec in eigenvector_centralities]
 
 # 将每个子图的top_100_nodes_per_subgraph存储到一个Excel中
-with pd.ExcelWriter(r'D:\mypython\math_modeling\protein\top_100_nodes_per_subgraph.xlsx') as writer:
+with pd.ExcelWriter(output_path) as writer:
     for i, top_100_nodes in enumerate(top_100_nodes_per_subgraph, 1):
         df = pd.DataFrame(top_100_nodes, columns=['Node', 'Centrality'])
         df.to_excel(writer, sheet_name=f'Subgraph_{i}', index=False)
