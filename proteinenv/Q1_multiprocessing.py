@@ -2,22 +2,35 @@ import pandas as pd
 import networkx as nx
 from concurrent.futures import ProcessPoolExecutor
 import sys
+import pickle 
 
 # 指定路径
 data_path = r'I:\AAA\protein\data.csv'
+graph_path = r'I:\AAA\protein\all.pkl'
 output_path = r'I:\AAA\protein\top_100_nodes_per_subgraph.xlsx'
 # 读取数据
 data_df = pd.read_csv(data_path, header=0)
-edges = data_df[['Protein A', 'Protein B', 'Score']]
+
 
 # 创建图
 G = nx.Graph()
-for index, row in edges.iterrows():
+for index, row in data_df.iterrows():
     weight = float(row['Score'])
-    G.add_edge(row['Protein A'], row['Protein B'], weight=weight)
+    protein_a = row['Protein A']
+    protein_b = row['Protein B']
+    
+    G.add_edge(protein_a,protein_b,weight=weight)
 
+    G.nodes[protein_a['gene']]=row['Gene A']
+    G.nodes[protein_b['gene']]=row['Gene B']
+    G.nodes[protein_a['Taxon']]=row['Taxon A']
+    G.nodes[protein_b['Taxon']]=row['Taxon B']
 print(G.number_of_nodes())
 print(G.number_of_edges())
+
+# 保存图
+with open(graph_path, 'wb') as f:
+    pickle.dump(G, f)
 
 # 获取所有连通分量
 subgraphs = [G.subgraph(c).copy() for c in nx.connected_components(G)]
