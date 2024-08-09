@@ -62,5 +62,5 @@ def main():
             result_df.to_excel(writer, sheet_name=sheet_name, index=False)
 
 if __name__ == '__main__':
-    main()
-    # A,B=process_file('all.csv')
+    # main()
+    A,B=process_file('2024-04-15.csv')
