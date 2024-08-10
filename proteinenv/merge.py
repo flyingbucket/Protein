@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 
+'''将Q3_compare所得数据合并到一个文件'''
 def merge_excels(output_dir, final_output):
     writer = pd.ExcelWriter(final_output)
     for file in os.listdir(output_dir):
@@ -12,4 +13,4 @@ def merge_excels(output_dir, final_output):
     writer._save()
 
 # Merge all individual Excel files into one
-merge_excels(r'G:\protein_in_G\temp', r'G:\protein_in_G\result\Diff.xlsx')
+merge_excels(r'G:\protein_in_G\temp', r'G:\protein_in_G\result\nodes_diff.xlsx')

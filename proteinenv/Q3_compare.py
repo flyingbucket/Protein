@@ -2,6 +2,8 @@ import pandas as pd
 import multiprocessing as mp
 import os
 
+'''计算相邻两年节点度的变化'''
+
 path_to_Q3DC=r'G:\protein_in_G\result\Q3DC.xlsx'
 temp_path=r'G:\protein_in_G\temp'
 merge_path=r'G:\protein_in_G\result'

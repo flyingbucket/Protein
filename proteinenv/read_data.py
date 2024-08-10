@@ -1,6 +1,9 @@
 import os
 import pandas as pd
 
+
+'''将数据转化为csv格式并生成对应的图'''
+
 input_folder = r'D:\mypython\math_modeling\protein\data\file'
 output_folder = r'D:\mypython\math_modeling\protein\data\csv'
 

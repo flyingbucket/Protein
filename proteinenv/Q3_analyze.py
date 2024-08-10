@@ -2,13 +2,17 @@ import os
 import pandas as pd
 import networkx as nx
 import pickle
+import multiprocessing
+from datetime import datetime as dt
 from multiprocessing import Pool
 
+
+'''图中每条边代表一个研究数据,故节点度的变化可以反映一个蛋白质的研究热度'''
 # 定义结果文件路径
-result_file =r'D:\mypython\math_modeling\protein\result\Q3DC.xlsx'
+result_file =r'J:\protein_in_ G\result\Q3DC.xlsx'
 # 定义文件夹路径
-csv_folder_path = r'D:\mypython\math_modeling\protein\data\csv'
-graph_folder_path = r'D:\mypython\math_modeling\protein\data\graph'
+csv_folder_path = r'J:\protein_in_ G\data\csv'
+graph_folder_path = r'J:\protein_in_ G\data\graph'
 
 def process_file(filename):
     file_path = os.path.join(csv_folder_path, filename)
@@ -33,27 +37,33 @@ def process_file(filename):
     with open(graph_file_path, 'wb') as f:
         pickle.dump(G, f)
     # 计算度中心性值
-    degree_centrality = nx.degree_centrality(G)
-    
+    degree_dict= dict(nx.degree(G)
+    )    
     # 将结果存储到DataFrame中
-    result_df = pd.DataFrame(list(degree_centrality.items()), columns=['Node', 'Degree_Centrality'])
+    result_df = pd.DataFrame(list(degree_dict.items()), columns=['Node', 'Degree'])
     
     return filename, result_df
+
+def parse_date_from_filename(filename):
+    try:
+        # 假设文件名格式为 'YYYY-MM-DD.csv'
+        date_str = filename.split('.')[0]
+        return dt.strptime(date_str, '%Y-%m-%d')
+    except ValueError:
+        print(f"Warning: Unable to parse date from filename {filename}")
+        return dt.max  # 返回一个最大日期作为默认值
+
 
 def main():
     # 获取所有CSV文件
     csv_files = [f for f in os.listdir(csv_folder_path) if f.endswith('.csv')]
     
-    # 排除最后一个文件
-    if csv_files:
-        csv_files = csv_files[:-1]
-
     # 使用多进程处理文件
     with Pool() as pool:
         results = pool.map(process_file, csv_files)
     
     # 按照文件名中的数字升序排列
-    results.sort(key=lambda x: int(''.join(filter(str.isdigit, x[0]))))
+    results.sort(key=lambda x: parse_date_from_filename(x[0]))
     
     # 将结果写入Excel文件的不同Sheet中
     with pd.ExcelWriter(result_file) as writer:
@@ -62,5 +72,7 @@ def main():
             result_df.to_excel(writer, sheet_name=sheet_name, index=False)
 
 if __name__ == '__main__':
-    # main()
-    A,B=process_file('2024-04-15.csv')
+    
+    multiprocessing.freeze_support()
+    main()
+    # A,B=process_file('2013-04-10.csv')

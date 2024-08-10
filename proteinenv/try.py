@@ -1,62 +1,56 @@
 import pandas as pd
-import multiprocessing as mp
 import os
+from datetime import datetime
 
-path_to_Q3DC=r'G:\protein_in_G\result\Q3DC.xlsx'
+edge_folder_path = r'G:\protein_in_G\data\csv'
 
-sheet_dict=pd.read_excel(path_to_Q3DC,sheet_name=None,header=0)
+edge_ls=os.listdir(edge_folder_path)
+print(edge_ls)
+
+# 将文件名去掉扩展名并转换为日期对象，然后进行排序
+edge_ls_sorted = sorted(edge_ls, key=lambda x: datetime.strptime(x.replace('.csv', ''), '%Y-%m-%d'))
+print(edge_ls_sorted)
+
+i=2012
 names=[]
 sheets=[]
-i=2012
-for sheet_name in sheet_dict.keys():
+for file in edge_ls_sorted:
     i+=1
-    name='year'+str(i)
-    globals()[name]=sheet_dict[sheet_name]
-    sheets.append(globals()[name])
+    name='y'+str(i)
     names.append(name)
-print(len(sheets))
+    # print(file.replace('.csv', ''))
+    globals()[name]=pd.read_csv(os.path.join(edge_folder_path, file), header=0)
+    sheets.append(globals()[name])
+    # print(globals()[name].head())
+
 print(names)
-def process_sheets(j, sheets, names):
-    former = sheets[j]
-    latter = sheets[j + 1]
 
-    former.set_index('Node', inplace=True)
-    latter.set_index('Node', inplace=True)
+# 创建一个 ExcelWriter 对象
+with pd.ExcelWriter('output.xlsx') as writer:
+    for i in range(len(names) - 1):
+        print(names[i], names[i + 1])
 
-    merged = pd.merge(former, latter, left_index=True, right_index=True,
-                      how='outer', suffixes=('_former', '_latter'))
-    merged.fillna(0, inplace=True)
-    merged.columns = ['old_d', 'new_d']
-    merged['diff'] = merged['new_d'] - merged['old_d']
+        former = globals()[names[i]][['Protein A', 'Protein B', 'Score']].rename(columns={'Score': 'Score_old'})
+        latter = globals()[names[i + 1]][['Protein A', 'Protein B', 'Score']].rename(columns={'Score': 'Score_new'})
 
-    m_name = names[j] + '-' + names[j + 1]
-    output_path = f'G:\\protein_in_G\\result\\diff_{j}.xlsx'
-    merged.to_excel(output_path, sheet_name=m_name, index=True)
+        # 合并两个 DataFrame
+        df_merged = pd.merge(former, latter, on=['Protein A', 'Protein B'], how='outer')
 
-def merge_excels(output_dir, final_output):
-    writer = pd.ExcelWriter(final_output)
-    for file in os.listdir(output_dir):
-        if file.startswith('diff_') and file.endswith('.xlsx'):
-            file_path = os.path.join(output_dir, file)
-            df = pd.read_excel(file_path, sheet_name=None)
-            for sheet_name, data in df.items():
-                data.to_excel(writer, sheet_name=sheet_name, index=False)
-    writer._save()
+        # 将空缺的 score 填充为 0
+        df_merged['Score_old'] = df_merged['Score_old'].fillna(0)
+        df_merged['Score_new'] = df_merged['Score_new'].fillna(0)
+        print(df_merged.head())
 
-if __name__ == '__main__':
-    mp.freeze_support()
-    # Assuming sheets and names are already defined
-    num_processes = mp.cpu_count()  # Use the number of available CPU cores
-    pool = mp.Pool(processes=num_processes)
+        # 计算Score增量
+        df_merged['Score_diff'] = df_merged['Score_new'] - df_merged['Score_old']
 
-    # Create a list of arguments for each process
-    args = [(j, sheets, names) for j in range(11)]
+        # 以Score_diff的绝对值进行降序排序
+        df_merged = df_merged.sort_values(by='Score_diff', key=lambda x: x.abs(), ascending=False)
+        print(df_merged.head())
 
-    # Use pool.starmap to apply the function to each set of arguments
-    pool.starmap(process_sheets, args)
-
-    pool.close()
-    pool.join()
-
-    # Merge all individual Excel files into one
-    merge_excels(r'G:\\protein_in_G\\result', r'G:\\protein_in_G\\result\\Diff.xlsx')
+        # 生成 sheet 名
+        sheet_name = f"{edge_ls_sorted[i].replace('.csv','')} ~ {edge_ls_sorted[i + 1].replace('.csv','')}"
+        
+        # 将 df_merged.head() 写入 Excel 文件
+        df_merged.head().to_excel(writer, sheet_name=sheet_name, index=False)
+    print("\a")

@@ -2,6 +2,8 @@ import networkx as nx
 import pandas as pd
 
 
+'''计算四类中心性'''
+
 # 读取数据
 data_df=pd.read_csv('D:\mypython\math_modeling\protein\data.csv',header=0)
 # print(data_df.columns)

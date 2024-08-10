@@ -4,6 +4,7 @@ from concurrent.futures import ProcessPoolExecutor
 import sys
 import pickle 
 
+'''只计算特征向量中心性'''
 # 指定路径
 data_path = r'I:\AAA\protein\data.csv'
 graph_path = r'I:\AAA\protein\all.pkl'
